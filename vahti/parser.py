@@ -1,6 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession, ClientConnectorError
+from aiohttp import ClientSession, ClientConnectorError, TCPConnector
 from vahti.cliargs import arg
 
 logger = logging.getLogger("vahti.parser")
@@ -28,6 +28,7 @@ class Parser:
 
     def start(self):
         self.session = ClientSession(
+            connector=TCPConnector(verify_ssl=False),
             headers={"User-Agent": "Mozilla/5.0 (X11; Linux i586; rv:62.0) Gecko/20100101 Firefox/62.0"}
         )
 
@@ -38,6 +39,7 @@ class Parser:
         pass
 
     async def get(self, url, params=None):
+        logger.debug(params)
         try:
             async with self.session.get(url, params=params) as response:
                 logger.debug(f"queried {response.url} status {response.status}")
@@ -51,7 +53,7 @@ class Parser:
 
     async def query(self, url=None):
         self.update_url(url)
-        logger.debug(f"query {url} with params {self.params}")
+        logger.debug(f"query {self.url} with params {self.params}")
         return await self.get(self.url, self.params)
 
     @staticmethod

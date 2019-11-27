@@ -4,7 +4,7 @@ from textwrap import shorten
 
 from vahti.cliargs import arg
 from vahti.parser import Parser
-
+from vahti.helpers import convert_str_to_float
 # TODO: add other parameters
 # TODO: check for and parse all pages
 # TODO: add sorting
@@ -16,6 +16,7 @@ logger = logging.getLogger("vahti.tori")
 
 
 @arg("-r", "--region", dest="region", default="koko_suomi", help="filter by region")
+@arg("-s","--sort", dest="sort", default="price", help="sort result by price or title", type=str,choices=["price","title"])
 class Tori(Parser):
     """A parser for tori.fi"""
 
@@ -50,11 +51,37 @@ class Tori(Parser):
                 "link": f"https://www.tori.fi/vi/{item_id}.htm",
                 "seen": now,
             }
-            logger.debug(self.item_format(**new_item))
             result[item_id] = new_item
-
+        self.print_result(result,self.config)
         return result
 
+    def print_result(self,result,config):
+        sorted_list=[]
+        dict_list=[result[item] for item in result]
+        if not dict_list:
+            return 1
+        if not config:
+            return 1
+        if "sort" not in config:
+            pass
+        elif config.get("sort") == "price":
+            sorted_list = self.sort_price(dict_list)
+        else:
+            sorted_list = self.sort_title(dict_list)
+        for item in sorted_list:
+            logger.debug(self.item_format(**item))
+
+    def sort_price(self,unsortlist):
+        if not unsortlist:
+            return 1
+        sorted_list = sorted(unsortlist, key=lambda k: convert_str_to_float(k["price"]))
+        return sorted_list
+
+    def sort_title(self,unsortlist):
+        if not unsortlist:
+            return 1
+        sorted_list = sorted(unsortlist, key=lambda k:(k["title"]))
+        return sorted_list
     @staticmethod
     def get_pages_url(soup):
         return [i.get("url") for i in soup.select(".long_pagination a")]

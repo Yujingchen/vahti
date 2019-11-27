@@ -12,13 +12,12 @@ logger = logging.getLogger("vahti.cli")
 class VahtiCLI:
     def __init__(self):
         self.vahti_parsers = parsers.available_parsers
-
         self.parser = argparse.ArgumentParser(prog="vahti")
         self.parser.add_argument("-a", "--all", action="store_true", help="display all results")
         self.parser.add_argument("--clear", action="store_true", help="clear the database and exit")
         self.parser.add_argument("--no-db", action="store_true", help="don't persist")
         self.subparsers = self.parser.add_subparsers(dest="parser", title="parser")
-
+#subparsers
         for parser, parser_class in self.vahti_parsers.items():
             p = self.subparsers.add_parser(parser, help=parser_class.__doc__)
             for arg in getattr(parser_class, ARG_LIST_PROP, []):
@@ -38,7 +37,7 @@ class VahtiCLI:
             return 1
 
         logger.debug("running %s parser", parser)
-
+        logger.debug(self.vahti_parsers)
         config = vars(self.args)
         vahti = Vahti(
             parser=self.vahti_parsers[parser](config=config), config=config, queries=getattr(self.args, "query", [])
@@ -48,6 +47,10 @@ class VahtiCLI:
 
         return return_code
 
+
+#args is command line arg as list ["foo"]
+#self.args is the data return from self.parser.parse_args()
+#Namespace(echo='foo')
     def run(self, args=None):
         args = args or sys.argv[1:]
         if not args:

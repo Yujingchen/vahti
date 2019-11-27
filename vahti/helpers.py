@@ -61,3 +61,10 @@ def persist_db(query, data):
 def clear_db():
     with shelve.open(SAVE_FILE) as db:
         db.clear()
+
+def convert_str_to_float(string):
+    trimed_string = ''.join(e for e in string if e.isnumeric())
+    if trimed_string:
+        return float(trimed_string)
+    else:
+        return 0.0
